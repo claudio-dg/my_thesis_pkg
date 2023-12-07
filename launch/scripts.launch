@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<launch>  
+  <node name="move_head_joint" pkg="my_thesis_pkg" type="move_head_joint" output="screen" launch-prefix="lxterminal -e" />
+  
+ <node name="my_ik_server" pkg="my_thesis_pkg" type="my_ik_server" output="screen" launch-prefix="lxterminal -e" />
+ 
+  <node name="clientLEFT_arm" pkg="my_thesis_pkg" type="clientLEFT_arm" output="screen" launch-prefix="lxterminal -e" />
+  
+   <node name="clientRIGHT_arm" pkg="my_thesis_pkg" type="clientRIGHT_arm" output="screen" launch-prefix="lxterminal -e" />
+   
+   <node name="Gripper_RightHand" pkg="my_thesis_pkg" type="Gripper_RightHand" output="screen" launch-prefix="lxterminal -e" />
+   
+   <node name="Gripper_LeftHand" pkg="my_thesis_pkg" type="Gripper_LeftHand" output="screen" launch-prefix="lxterminal -e" /> 
+  
+  
+<!--  commento -->
+
+</launch>
+
+
+
