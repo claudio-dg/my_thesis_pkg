@@ -1,3 +1,28 @@
+/**
+* \file my_ik_server.cpp
+* \brief Inverse Kinematics solver
+* \author Claudio Del Gaizo
+* \version 0.1
+* \date 7/12/2023
+*
+*
+* \details
+*
+* Subscribes to: <BR>
+*
+* /joint_states : to have info about TIAGo's current arms configuration
+*
+*
+* Service server to: <BR>
+*
+* /my_ik_solver_service : to receive request about Inverse kinematics computations
+*
+*
+* Description:
+*
+* This simple node implements the server for the service "/my_ik_solver_service", receving request to compute the inverse kinematic. Given a frame position of the end effector return TIAGo's arm configuration required to reach, Subscribes to /joint_states to have info about TIAGo's current arms configuration useful for its computations.
+**/
+
 // ROS headers
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
@@ -19,10 +44,10 @@
 //Custom srv header
 #include <my_thesis_pkg/MyInverseKinematic.h>
 
-std::string base_link = "torso_lift_link";
+std::string base_link = "torso_lift_link"; ///< chain's base link definition
 
-    std::string left_end_link = "arm_left_tool_link"; 
-    std::string right_end_link = "arm_right_tool_link"; 
+    std::string left_end_link = "arm_left_tool_link"; ///< left chain's end link definition
+    std::string right_end_link = "arm_right_tool_link"; ///< right chain's end link definition
 
     // Create 2 KDL Chains using base link and end link
     KDL::Chain left_kdl_chain;
@@ -48,7 +73,20 @@ std::string base_link = "torso_lift_link";
    KDL::Frame right_end_effector_desired;
    KDL::Frame left_end_effector_desired; 
 
-// Callback to update joint states info
+
+/**
+* \brief Callback for for the myRemapped_cmd_vel topic 
+*
+* \param msg : sensor_msgs::JointState::ConstPtr : the pointer to the joint state data
+*
+*
+*
+* \return void
+*
+* Callback function to update current joint states information
+*
+**/
+/* ***************************************************************************/
 void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
  // Access message's fields
@@ -64,7 +102,20 @@ void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
 }
 
-//callback to my service
+/**
+* \brief Callback of the service /my_ik_solver_service  
+*
+* \param req : my_thesis_pkg::MyInverseKinematic::Request : contains a 6D desired Pose of the end effector
+*
+* \param resp : :my_thesis_pkg::MyInverseKinematic::Response : contains the correpsondent arm's joints configuration to place the end effector in the desired pose
+*
+* \return bool
+*
+*
+* This function is executed each time a new request is received. Takes the request Pose and computes the inverse kinematics on TIAGo's geometry using Newton Raphson method, sendind as response the correpsondent arm's joints configuration to place the end effector in the desired pose.
+*
+**/
+/* ***************************************************************************/
 bool IKSolver(my_thesis_pkg::MyInverseKinematic::Request& req, my_thesis_pkg::MyInverseKinematic::Response& res)
 {
    // Create left ik and fk solvers required by KDL::ChainIkSolverPos_NR_JL
@@ -155,7 +206,13 @@ bool IKSolver(my_thesis_pkg::MyInverseKinematic::Request& req, my_thesis_pkg::My
 }
 
  
-
+/**
+* \brief main function
+*
+*
+* Entry point. Initializes the node, the subscriber to /joint_states and the service server to /my_ik_solver_service. Then it initializes useful variablee for the IK computation and waits for the service to be called.
+*
+**/
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "ik_solver_server");

@@ -1,0 +1,152 @@
+\hypertarget{move__head__joint_8cpp}{}\doxysection{src/move\+\_\+head\+\_\+joint.cpp File Reference}
+\label{move__head__joint_8cpp}\index{src/move\_head\_joint.cpp@{src/move\_head\_joint.cpp}}
+
+
+T\+I\+A\+Go\textquotesingle{}s head controller.  
+
+
+{\ttfamily \#include $<$exception$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$boost/shared\+\_\+ptr.\+hpp$>$}\newline
+{\ttfamily \#include $<$geometry\+\_\+msgs/\+Pose.\+h$>$}\newline
+{\ttfamily \#include $<$ros/ros.\+h$>$}\newline
+{\ttfamily \#include $<$actionlib/client/simple\+\_\+action\+\_\+client.\+h$>$}\newline
+{\ttfamily \#include $<$control\+\_\+msgs/\+Follow\+Joint\+Trajectory\+Action.\+h$>$}\newline
+{\ttfamily \#include $<$ros/topic.\+h$>$}\newline
+{\ttfamily \#include $<$unity\+\_\+robotics\+\_\+demo\+\_\+msgs/\+My\+Pos\+Rot.\+h$>$}\newline
+Include dependency graph for move\+\_\+head\+\_\+joint.\+cpp\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{move__head__joint_8cpp__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_ae68c8b899e24843ae1611f446f97ca62}\label{move__head__joint_8cpp_ae68c8b899e24843ae1611f446f97ca62}} 
+typedef actionlib\+::\+Simple\+Action\+Client$<$ control\+\_\+msgs\+::\+Follow\+Joint\+Trajectory\+Action $>$ {\bfseries head\+\_\+control\+\_\+client}
+\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a021b709b37231b432c187b2bfe4d9054}\label{move__head__joint_8cpp_a021b709b37231b432c187b2bfe4d9054}} 
+typedef boost\+::shared\+\_\+ptr$<$ head\+\_\+control\+\_\+client $>$ {\bfseries head\+\_\+control\+\_\+client\+\_\+\+Ptr}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{move__head__joint_8cpp_aa246d58b1957b6ce2f4b2f37c9b56fb7}{create\+Head\+Client}} (head\+\_\+control\+\_\+client\+\_\+\+Ptr \&action\+\_\+client, const std\+::string head\+\_\+controller\+\_\+name)
+\begin{DoxyCompactList}\small\item\em function to create action client \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{move__head__joint_8cpp_a71d7bab3cef95744a862bc164d37069b}{Unity\+Callback}} (const unity\+\_\+robotics\+\_\+demo\+\_\+msgs\+::\+My\+Pos\+Rot\+Const\+Ptr \&msg)
+\begin{DoxyCompactList}\small\item\em Callback for the /head\+\_\+frame\+\_\+topic. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{move__head__joint_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}{main}} (int argc, char $\ast$$\ast$argv)
+\begin{DoxyCompactList}\small\item\em main function \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a26fd84d522945b6038221d9e38c7cc39}\label{move__head__joint_8cpp_a26fd84d522945b6038221d9e38c7cc39}} 
+float {\bfseries roll}
+\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a282e7d4378d4a18a805b8980295ac86c}\label{move__head__joint_8cpp_a282e7d4378d4a18a805b8980295ac86c}} 
+float {\bfseries pitch}
+\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a7efc219781df4a1e281cb5d348b7fbf9}\label{move__head__joint_8cpp_a7efc219781df4a1e281cb5d348b7fbf9}} 
+float \mbox{\hyperlink{move__head__joint_8cpp_a7efc219781df4a1e281cb5d348b7fbf9}{yaw}}
+\begin{DoxyCompactList}\small\item\em global variables to store head\textquotesingle{}s orientation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a18b70c13e39099a8cb0b7a3e3f612193}\label{move__head__joint_8cpp_a18b70c13e39099a8cb0b7a3e3f612193}} 
+float \mbox{\hyperlink{move__head__joint_8cpp_a18b70c13e39099a8cb0b7a3e3f612193}{old\+\_\+pitch}} = 0
+\begin{DoxyCompactList}\small\item\em global variables to store head\textquotesingle{}s previous pitch value \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_aa7be88356c42f6807dbe0b2a9b9a8297}\label{move__head__joint_8cpp_aa7be88356c42f6807dbe0b2a9b9a8297}} 
+float \mbox{\hyperlink{move__head__joint_8cpp_aa7be88356c42f6807dbe0b2a9b9a8297}{old\+\_\+yaw}} = 0
+\begin{DoxyCompactList}\small\item\em global variables to store head\textquotesingle{}s previous yaw value \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_aa4242f133d4451c50dcc781d2b6081fb}\label{move__head__joint_8cpp_aa4242f133d4451c50dcc781d2b6081fb}} 
+bool \mbox{\hyperlink{move__head__joint_8cpp_aa4242f133d4451c50dcc781d2b6081fb}{different\+\_\+rotation}} = false
+\begin{DoxyCompactList}\small\item\em global boolean to identify a different rotation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_afa2bc74879866162116c6f9b1849baa5}\label{move__head__joint_8cpp_afa2bc74879866162116c6f9b1849baa5}} 
+bool \mbox{\hyperlink{move__head__joint_8cpp_afa2bc74879866162116c6f9b1849baa5}{different\+\_\+inclination}} = false
+\begin{DoxyCompactList}\small\item\em global boolean to identify a different orientation \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_aa798006f094abc0bf35ea7d23a597f74}\label{move__head__joint_8cpp_aa798006f094abc0bf35ea7d23a597f74}} 
+bool \mbox{\hyperlink{move__head__joint_8cpp_aa798006f094abc0bf35ea7d23a597f74}{new\+\_\+frame\+\_\+received}} = false
+\begin{DoxyCompactList}\small\item\em global boolean to identify a different frame received \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a29a2ba9926a1f2c6b5459b20829521e3}\label{move__head__joint_8cpp_a29a2ba9926a1f2c6b5459b20829521e3}} 
+float \mbox{\hyperlink{move__head__joint_8cpp_a29a2ba9926a1f2c6b5459b20829521e3}{joint\+\_\+min\+\_\+limits}} \mbox{[}2\mbox{]} = \{-\/1.\+24, -\/0.\+98\}
+\begin{DoxyCompactList}\small\item\em robot\textquotesingle{}s head joint minimum limits \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{move__head__joint_8cpp_a49baa3c6927be1791c51689dcc1a0cb9}\label{move__head__joint_8cpp_a49baa3c6927be1791c51689dcc1a0cb9}} 
+float \mbox{\hyperlink{move__head__joint_8cpp_a49baa3c6927be1791c51689dcc1a0cb9}{joint\+\_\+max\+\_\+limits}} \mbox{[}2\mbox{]} = \{1.\+24, 0.\+72\}
+\begin{DoxyCompactList}\small\item\em robot\textquotesingle{}s head joint maximum limits \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+T\+I\+A\+Go\textquotesingle{}s head controller. 
+
+\begin{DoxyAuthor}{Author}
+Claudio Del Gaizo 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+1 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+7/12/2023
+\end{DoxyDate}
+Subscribes to\+: ~\newline
+
+
+/head\+\_\+frame\+\_\+topic \+: to have info about user\textquotesingle{}s head orientation from Unity
+
+Action Client to\+: ~\newline
+
+
+/head\+\_\+controller/follow\+\_\+joint\+\_\+trajectory \+: to move T\+I\+A\+Go\textquotesingle{}s head
+
+Description\+:
+
+This simple node subscribes to the /head\+\_\+frame\+\_\+topic to receive data from Unity\textquotesingle{}s publisher about the orientation of the user\textquotesingle{}s head. Then maps the received Pitch and Yaw values with the joints of the robot head, to let T\+I\+A\+Go\textquotesingle{} head perform the same rotations of user\textquotesingle{}s head. To do so it involves the /head\+\_\+controller/follow\+\_\+joint\+\_\+trajectory action service. 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{move__head__joint_8cpp_aa246d58b1957b6ce2f4b2f37c9b56fb7}\label{move__head__joint_8cpp_aa246d58b1957b6ce2f4b2f37c9b56fb7}} 
+\index{move\_head\_joint.cpp@{move\_head\_joint.cpp}!createHeadClient@{createHeadClient}}
+\index{createHeadClient@{createHeadClient}!move\_head\_joint.cpp@{move\_head\_joint.cpp}}
+\doxysubsubsection{\texorpdfstring{createHeadClient()}{createHeadClient()}}
+{\footnotesize\ttfamily void create\+Head\+Client (\begin{DoxyParamCaption}\item[{head\+\_\+control\+\_\+client\+\_\+\+Ptr \&}]{action\+\_\+client,  }\item[{const std\+::string}]{head\+\_\+controller\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+function to create action client 
+
+
+\begin{DoxyParams}{Parameters}
+{\em action\+\_\+client} & \+: head\+\_\+control\+\_\+client\+\_\+\+Ptr\& \+: the pointer to the action client\\
+\hline
+{\em head\+\_\+controller\+\_\+name} & \+: std\+::string \+: the name of the controller\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+This function is called to creat a client to the /head\+\_\+controller/follow\+\_\+joint\+\_\+trajectory action service, used to move T\+I\+A\+Go\textquotesingle{}s head \mbox{\Hypertarget{move__head__joint_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}\label{move__head__joint_8cpp_a3c04138a5bfe5d72780bb7e82a18e627}} 
+\index{move\_head\_joint.cpp@{move\_head\_joint.cpp}!main@{main}}
+\index{main@{main}!move\_head\_joint.cpp@{move\_head\_joint.cpp}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$$\ast$}]{argv }\end{DoxyParamCaption})}
+
+
+
+main function 
+
+Entry point. Initializes the node, the subscriber to /head\+\_\+frame\+\_\+topic and the action client to move T\+I\+A\+GO\textquotesingle{}s head. Then in the main loop, send a new goal to the action service each time a different user\textquotesingle{}s head orientation is correctly received. Directly maps pitch and yaw values discarding roll\textquotesingle{}s as T\+I\+A\+Go\textquotesingle{}s head has 2 DoF. \mbox{\Hypertarget{move__head__joint_8cpp_a71d7bab3cef95744a862bc164d37069b}\label{move__head__joint_8cpp_a71d7bab3cef95744a862bc164d37069b}} 
+\index{move\_head\_joint.cpp@{move\_head\_joint.cpp}!UnityCallback@{UnityCallback}}
+\index{UnityCallback@{UnityCallback}!move\_head\_joint.cpp@{move\_head\_joint.cpp}}
+\doxysubsubsection{\texorpdfstring{UnityCallback()}{UnityCallback()}}
+{\footnotesize\ttfamily void Unity\+Callback (\begin{DoxyParamCaption}\item[{const unity\+\_\+robotics\+\_\+demo\+\_\+msgs\+::\+My\+Pos\+Rot\+Const\+Ptr \&}]{msg }\end{DoxyParamCaption})}
+
+
+
+Callback for the /head\+\_\+frame\+\_\+topic. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & \+: unity\+\_\+robotics\+\_\+demo\+\_\+msgs\+::\+My\+Pos\+Rot\+Const\+Ptr\& \+: a 6D Pose of user\textquotesingle{}s head frame. orientation expressed in R\+PY\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void
+\end{DoxyReturn}
+Callback function to receive msgs from U\+N\+I\+TY environment about VR Head Mounted Display rotation. Receive R\+PY data from U\+N\+I\+TY, performs limits\textquotesingle{}check and compares current orientation with previous one to notify the main function when a different rotation has been received. 

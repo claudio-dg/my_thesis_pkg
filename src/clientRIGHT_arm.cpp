@@ -1,136 +1,116 @@
+/**
+* \file clientRIGHT_arm.cpp
+* \brief TIAGo's right arm controller
+* \author Claudio Del Gaizo
+* \version 0.1
+* \date 7/12/2023
+*
+*
+* \details
+*
+* Subscribes to: <BR>
+*
+* /right_arm_frame_topic : to have info about user's right hand's movements from Unity
+*
+*
+* Action Client to: <BR>
+*
+* /arm_right_controller/follow_joint_trajectory : to move TIAGo's right arm
+*
+*
+* Service client to: <BR>
+*
+* /my_ik_solver_service : to send request about Inverse kinematics computations
+*
+*
+* Description:
+*
+* This simple node subscribes to the /right_arm_frame_topic to receive data from Unity's publisher about the Pose of the user's right hand. Then uses the received Pose to request an IK solution to /my_ik_solver_service. In the end sends the configuration received as response to the /arm_right_controller/follow_joint_trajectory action servert to move TIAGo's right arm.
+**/
+
 // C++ standard headers
 #include <exception>
 #include <string>
-
 // Boost headers
 #include <boost/shared_ptr.hpp>
-
 // ROS headers
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <ros/topic.h>
 #include <sensor_msgs/JointState.h>
-
-
-
 #include <geometry_msgs/Pose.h>
-
-//includo il custom srv *
-//#include <tiago_dual_moveit_tutorial/MyInverseKinematic.h>
+// custom srv header
 #include <my_thesis_pkg/MyInverseKinematic.h>
-
-//provo a includere il msg per Unity -->modifico CmakeList inserendo unity_robotics_demo_msgs in find package a inzio
+// unity msg headers
 #include <unity_robotics_demo_msgs/MyPosRot.h>
-//#include <unity_robotics_demo_msgs/PosRot.h>
+#include <unity_robotics_demo_msgs/PosRot.h>
+#include <tf/tf.h>
 
-// Our Action interface type for moving TIAGo's ARM, provided as a typedef for convenience
+// Action interface type for moving TIAGo's ARM, provided as a typedef for convenience
 typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> arm_control_client;
 typedef boost::shared_ptr<arm_control_client> arm_control_client_Ptr;
 
+// Global definitions
+ros::ServiceClient ikClient; ///< global client definition
+my_thesis_pkg::MyInverseKinematic goal_frame; ///< global message definition
+bool new_frame_received = false; ///< global boolean to identify a different frame received
+float prev_roll = 0; ///< global variables to store hand's previous roll value
+float prev_pitch = 0; ///< global variables to store hand's previous pitch value
+float prev_yaw = 0; ///< global variables to store hand's previous yaw value
 
-/* ############################################################################################
-
-qui per ira 1° step  = voglio solo implementare un client che mandi una posizione FRAME predefinita al server
-(quindi non ricevuta ancora ma settata manualmente), prende risposta e la usa per muovere braccio robot
-
-poi 2° step = fare in modo che pos mandata dal client sia quella ricevuta tramite sub da un nodo di UNITY
-
-CONSULTARE PROF PER CAPIRE SE HA SENSO DIVIDERE QUESTIONEDEI DUE NODI SUB diversi per LE DUE BRACCIA
-quindi se conviene pubblicare su un topic solo (distinguendo left/right) e poi avere un solo nodo sub che mandi
-richiesta singola a server
-OPPURE se conviene pubblicare su due nodi diversi e quindi avere due sub in due nodi separati...
-
-############################################################################################*/
-
-// Global variables
-
-//creo client globale
-ros::ServiceClient ikClient;
-ros::ServiceClient limitless_ikClient;
-//creo oggetto per la request
-//tiago_dual_moveit_tutorial::MyInverseKinematic goal_frame;
-my_thesis_pkg::MyInverseKinematic goal_frame;
-
-
-//per vedere quanto tempo passa
-ros::Time previous_msg_time;
-
-//////// control_msgs::FollowJointTrajectoryGoal resulting_joint_goal; ############
-
-
-bool new_frame_received = false;
-
-// Callback function for the joint states ----> DEVE DIVENTARE CALLBACK PER IL FRAME ( +nome braccio oppure mi servono 2 nodi per questione che avevo detto del farli muovere contemporanemante???) PUBBLICATO DA UNITY
-/*
-void jointStateCallback(const control_msgs::FollowJointTrajectoryGoalConstPtr& msg)
-{
-  desired_joint_state = *msg;
-  new_joint_state_received = true;
-}
-*/
-
-//questa sarà la calbback del sub al topic 'braccio dx'su cui unity pubblicherà pos desiderata frame (da creare custom_msg x questo)
-/* OLD ONE FUNZIONANTE
-void futureCallback(const geometry_msgs::PoseConstPtr& msg ) //(const control_msgs::FollowJointTrajectoryGoalConstPtr& msg)
-{
-  // desired_frame = *msg; qui dovrei inizializzare il frame desiderato con quello ricevuto da unity, per ora manualmente lo setto
-  
-  //sta parte sotto quindi va poi cancellata
-  //riempo la richiesta del client con il valore che ricevo qua (setto ora a mano)
+/**
+* \brief Subscriber Callback for /right_arm_frame_topic
+* 
+* \param msg : unity_robotics_demo_msgs::MyPosRotConstPtr& : a 7D Pose of user's right palm's frame. orientation expressed in Quaternions.
+*
+*
+* \return void
+*
+* 
+* Callback function to receive data from Unity's publisher about the Pose of the user's right hand. Converts orientation from quaternions into Euler angles and updates the value of 'goal_frame' global variable.
+*
+**/
+void UnityCallback(const unity_robotics_demo_msgs::PosRotConstPtr& msg )
+{    
+  // fill the client request with the values received
   goal_frame.request.arm = "right";
-  goal_frame.request.end_effector_frame.position.x = msg->position.x; //0.217; //qui poi dovro mettere tipo msg->posX na roba cois, riempo coi campi del messaggio
-  goal_frame.request.end_effector_frame.position.y = msg->position.y; //-0.228;
-  goal_frame.request.end_effector_frame.position.z = msg->position.z; //-0.476;//0.35;
-  goal_frame.request.end_effector_frame.orientation.x = msg->orientation.x; //orient poi da gestire, per ora il server le resetta come vuole lui
-  goal_frame.request.end_effector_frame.orientation.y = msg->orientation.y;
-  goal_frame.request.end_effector_frame.orientation.z = msg->orientation.z;
-  goal_frame.request.end_effector_frame.orientation.w = msg->orientation.w;
+  goal_frame.request.end_effector_frame.position.x = msg->pos_x; 
+  goal_frame.request.end_effector_frame.position.y = msg->pos_y; 
+  goal_frame.request.end_effector_frame.position.z = msg->pos_z; 
+ 
+  // Convert received quaternions into RPY
+  tf::Quaternion q(msg->rot_x, msg->rot_y, msg->rot_z, msg->rot_w); 
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
   
-  ROS_INFO("callbackFrame--ricevuto nuovo frame con x =  %f...", msg->position.x);
+  // modify roll value in case of TIAGo's pal-5-Hand to have coherency with users' hand
+  //roll = roll - 1.57; 
+   
+  goal_frame.request.end_effector_frame.orientation.x = roll;
+  goal_frame.request.end_effector_frame.orientation.y = pitch; 
+  goal_frame.request.end_effector_frame.orientation.z = yaw;
+  
+  ROS_INFO("rotation values: roll = %f pitch = %f yaw= %f ", roll, pitch, yaw);
   new_frame_received = true;
 }
-*/
 
-//provo a implementare vera callback
-void UnityCallback(const unity_robotics_demo_msgs::MyPosRotConstPtr& msg )
-{
-  /* 
-  PosRot:
-float32 pos_x
-float32 pos_y
-float32 pos_z
-float32 rot_x
-float32 rot_y
-float32 rot_z
-float32 rot_w
-  
-  */
-  
-  ros::Time current_time = ros::Time::now();
-  double time_elapsed = (current_time - previous_msg_time).toSec();
-  // Stampa il tempo trascorso tra i due messaggi in secondi
-  ROS_INFO("\n ENTRO CALLBACK --> Tempo trascorso tra due messaggi: %.3f secondi\n", time_elapsed);
-  // Aggiorna il tempo del messaggio precedente con il tempo corrente
-  previous_msg_time = current_time;
-  
-  
-  //riempo la richiesta del client con il valore che ricevo qua
-  goal_frame.request.arm = "right";
-  goal_frame.request.end_effector_frame.position.x = msg->pos_x; //0.217; //qui poi dovro mettere tipo msg->posX na roba cois, riempo coi campi del messaggio
-  goal_frame.request.end_effector_frame.position.y = msg->pos_y; //-0.228;
-  goal_frame.request.end_effector_frame.position.z = msg->pos_z; //-0.476;//0.35;
-  goal_frame.request.end_effector_frame.orientation.x = msg->roll; //orient poi da gestire---> provo lasciando geom_msg/Pose anche se sarebbero quaternioni ma amen, io so che dentro a x metto roll, y=pitch ecc...poi non importa...lato server per prendere il roll estraggo quel campo li ecc...
-  goal_frame.request.end_effector_frame.orientation.y = msg->pitch;
-  goal_frame.request.end_effector_frame.orientation.z = msg->yaw;
-  //goal_frame.request.end_effector_frame.orientation.w = msg->rot_w;
-  
-  ROS_INFO("ricevuto nuovo frame con x =  %f...", msg->pos_x);
-  
 
-  new_frame_received = true;
-}
-// Create a ROS action client to move TIAGo's arm --> questo pezzo rimane uguale, dovro poi chiamare 2 volte se faccio un nodo solo per entrambe le braccia, altrimentirimane cosi e faccio due nodi separati,,uno per braccio dx e uno per braccio sx
+
+/**
+* \brief function to create action client 
+*
+* \param action_client : arm_control_client_Ptr& : the pointer to the action client
+*
+* \param arm_controller_name : std::string : the name of the controller
+*
+* \return void
+*
+* This function is called to creat a client to the /arm_right_controller/follow_joint_trajectory action service, used to move TIAGo's right arm
+*
+**/
+/* ***************************************************************************/
 void createArmClient(arm_control_client_Ptr& action_client, const std::string& arm_controller_name)
 {
   ROS_INFO("Creating action client for %s...", arm_controller_name.c_str());
@@ -150,60 +130,97 @@ void createArmClient(arm_control_client_Ptr& action_client, const std::string& a
     throw std::runtime_error("Error in createArmClient: arm controller action server not available");
 }
 
-// Move the arm to the desired joint state --> qui dentro devo inserire la chiamata al servizio IK e prendere la risposta contenente pos desiderata giunti, OPPURE!! LASCIO QUESTA INVARIATA E FACCIO UN'ALTRA funzione che in cui c'è
-//chiamata a servizio ik...e semplicemente la chiamo nel main prima di questa funzione moveArmToJointState...
+/**
+* \brief function to move TIAGo's arm 
+*
+* \param joint_goal : control_msgs::FollowJointTrajectoryGoal: the values of joints angles to control TIAGo's arm
+*
+* \param action_client : arm_control_client_Ptr& : the pointer to the action client
+*
+* \return void
+*
+* This function is called to eventually move TIAGo's arm by sending the joint configuration to the action server /arm_right_controller/follow_joint_trajectory
+*
+**/
+/* ***************************************************************************/
 void moveArmToJointState(const control_msgs::FollowJointTrajectoryGoal& joint_goal, arm_control_client_Ptr& action_client)
 {
   control_msgs::FollowJointTrajectoryGoal goal;
-  goal = joint_goal;
-
-  
-  goal.trajectory.header.stamp = ros::Time::now(); //qui serve rimettere questo /serve solo qua forse?
-
- 
- 
- // PROVA DI STAMPA NOMI GIUNTI GOAL --> sono corretti...
- 
- for (int j = 0; j < 7; ++j)
- {
-    //ROS_INFO("nomi joint goal: n %i = %s*",j,goal.trajectory.joint_names[j].c_str());
-    ROS_INFO("pos joint goal: n %i = %f \n",j,goal.trajectory.points[0].positions[j]);
-  }
-  
+  goal = joint_goal;  
+  goal.trajectory.header.stamp = ros::Time::now(); 
   // Send the goal to the action server
   action_client->sendGoal(goal);
 }
 
 
-// ----- FUNZIONE PER IK ------
 
-control_msgs::FollowJointTrajectoryGoal computeIK() //lo passo come argomento goal_frame o lo lascio cosi globale? forse come argomento è piu leggibile il codice
+// function that takes desired frame's positions contained in the global variable 'goal_frame' to
+// call the 'ik_service' and returns as output the joint values contained in the service response
+
+/**
+* \brief function to compute the Invesrse Kinematics on TIAGo's geometry 
+*
+*
+* \return resulting_joint_goal: control_msgs::FollowJointTrajectoryGoal: TIAGO's arm joints' angles
+*
+* function that takes desired frame's positions contained in the global variable 'goal_frame' to call the 'ik_service' and returns as output the joint values contained in the service response
+*
+**/
+/* ***************************************************************************/
+control_msgs::FollowJointTrajectoryGoal computeIK() 
 {
- control_msgs::FollowJointTrajectoryGoal resulting_joint_goal;
-//la risposta del servizio la metto poi dentro a var "resulting_joint_goal" ? 
+control_msgs::FollowJointTrajectoryGoal resulting_joint_goal;
+// call 'my_ik_solver_service' to receive joint position required to reach 'goal_frame'
 ikClient.waitForExistence();
 ikClient.call(goal_frame);
 ROS_INFO("calling ik_solver_service ...");
 
-// ******** CHIAMATA ALTERNATIVA AD ALTRO SERVIZIO SENZA Joint_limits SE QUESTO FALLISCE ********
+// in case of empty response, call again the same service passing as request the same position but with previous (successfull) rotation components
 if(goal_frame.response.joint_positions.empty())
 {
-  ROS_INFO("\n ** Receveived empty response from ik_server..not reachable pos ... ** ");
-  ROS_INFO("Calling alternative service to receive acceptable values...\n");
-  limitless_ikClient.waitForExistence();
-  limitless_ikClient.call(goal_frame);
+  ROS_INFO("\n * Receveived empty response from ik_server..not reachable pos ... * ");
+  ROS_INFO("Calling AGAIN the service PASSING former Rotation values...\n");
+  goal_frame.request.end_effector_frame.orientation.x = prev_roll;
+  goal_frame.request.end_effector_frame.orientation.y = prev_pitch; 
+  goal_frame.request.end_effector_frame.orientation.z = prev_yaw;
+  ROS_INFO(" Calling AGAIN the service with  ROLL = %f pitch = %f yaw= %f ", prev_roll, prev_pitch, prev_yaw);
   
+  ikClient.waitForExistence();
+  ikClient.call(goal_frame);
+  
+  // if response is empty again do nothing
+  if(goal_frame.response.joint_positions.empty())
+  {  
+  ROS_INFO("\n * Receveived AGAIN empty response from ik_server..not reachable pos ... * ");
+  }  
 }
-/////// ** /////else{ 
+else //else response is NOT empty 
+{
+//update previous rotation values
+prev_roll = goal_frame.request.end_effector_frame.orientation.x;
+prev_pitch = goal_frame.request.end_effector_frame.orientation.y;
+prev_yaw = goal_frame.request.end_effector_frame.orientation.z;
+ROS_INFO(" saved ROLL = %f pitch = %f yaw= %f ", prev_roll, prev_pitch, prev_yaw);
+}
 
-//forse in questo modo dato che dovrei ricevere in ogni caso ina risposta non serve piu l'else..
-//riempo oggetto resulting_joint_goal con risposta del client
-//resulting_joint_goal // per riempirlo pero devo mettere qui anche i joint names manualmente ecc vedi prova pub ( i nomi potrei inizializzarli nel main
-//goal_frame.response
-//costruisco ogg FollowJointTrajGoal usando priori knowledge e response del server
+// if response is empty here, return predefined flag value
+if(goal_frame.response.joint_positions.empty())
+{	 
+   // resize to avoid segmentation fault
+   resulting_joint_goal.trajectory.points.resize(1);
+	 resulting_joint_goal.trajectory.points[0].positions.resize(7);
+	 // fill variable with predefined flag value
+	 resulting_joint_goal.trajectory.points[0].positions[0] = 200;
 
-resulting_joint_goal.trajectory.header.stamp = ros::Time::now(); //questa NON puo andare nel main
-resulting_joint_goal.trajectory.joint_names.push_back("arm_right_1_joint");//ste cose volendo le metto nel main cosi fa una volta sola?
+	 return resulting_joint_goal;
+}
+// else fill the variable with obtained joints values
+else
+{
+
+// fill resulting_joint_goal fields
+resulting_joint_goal.trajectory.header.stamp = ros::Time::now();
+resulting_joint_goal.trajectory.joint_names.push_back("arm_right_1_joint");
 resulting_joint_goal.trajectory.joint_names.push_back("arm_right_2_joint");
 resulting_joint_goal.trajectory.joint_names.push_back("arm_right_3_joint");
 resulting_joint_goal.trajectory.joint_names.push_back("arm_right_4_joint");
@@ -215,36 +232,41 @@ resulting_joint_goal.trajectory.joint_names.push_back("arm_right_7_joint");
 resulting_joint_goal.trajectory.points.resize(1);
 
 // First and ONLY trajectory point
-  // Positions
   int index = 0;
   resulting_joint_goal.trajectory.points[index].positions.resize(7);
-  resulting_joint_goal.trajectory.points[index].positions[0] = goal_frame.response.joint_positions[0];//1.0; //0.0
+  resulting_joint_goal.trajectory.points[index].positions[0] = goal_frame.response.joint_positions[0];
   resulting_joint_goal.trajectory.points[index].positions[1] = goal_frame.response.joint_positions[1];
-  resulting_joint_goal.trajectory.points[index].positions[2] = goal_frame.response.joint_positions[2];//0.4;
+  resulting_joint_goal.trajectory.points[index].positions[2] = goal_frame.response.joint_positions[2];
   resulting_joint_goal.trajectory.points[index].positions[3] = goal_frame.response.joint_positions[3];
   resulting_joint_goal.trajectory.points[index].positions[4] = goal_frame.response.joint_positions[4];
   resulting_joint_goal.trajectory.points[index].positions[5] = goal_frame.response.joint_positions[5];
   resulting_joint_goal.trajectory.points[index].positions[6] = goal_frame.response.joint_positions[6];
    
-  resulting_joint_goal.trajectory.points[index].velocities.resize(7); //ste cose volendo le metto nel main cosi fa una volta sola?
+  resulting_joint_goal.trajectory.points[index].velocities.resize(7);
   for (int j = 0; j < 7; ++j)
      {
-    resulting_joint_goal.trajectory.points[index].velocities[j] = 1.0; //---> POSSO SETTARE VELOCITA DIVERSE PER I VARI GIUNTI : ESEMPIO IL PRIMO GIUNTO CHE MAGARI FA MOVIMENTI PIU AMPI PIU VELOCE MENTRE QUELLI FINALI PIU LENTI PER MOVIMENTO PIU SMOOTH??
+      // set low velocities for smooth and accurate movements
+      resulting_joint_goal.trajectory.points[index].velocities[j] = 0.1;
      }
   
-  resulting_joint_goal.trajectory.points[index].time_from_start = ros::Duration(1.25);
+  resulting_joint_goal.trajectory.points[index].time_from_start = ros::Duration(0.8);
   return resulting_joint_goal;
-  /////// ** ///// }
+  }
 }
-// Entry point
+
+
+/**
+* \brief main function
+*
+*
+* Entry point. Initializes the node, the subscriber to /right_arm_frame_topic, the action client to move TIAGO's arm and the service client to /my_ik_solver_service. Then in the main loop, waits for a new position to be received, then calls the 'computeIK()' function to send a request to /my_ik_solver_service, in order to compute the inverse Kinematics of the Hand pose received. In the end, if IK was computed succesfully, moves the robot sending the joints configuration obtained to the action service /arm_right_controller/follow_joint_trajectory.
+*
+**/
 int main(int argc, char** argv)
 {
   // Init the ROS node
-  ros::init(argc, argv, "client_ik_e_publisher_posizione_right");
-
-  ROS_INFO("Starting MY_run_dual_traj_control application ...");
-  
-  
+  ros::init(argc, argv, "client_ik_publisher_right");
+  ROS_INFO("Starting right arm application ...");
 
   // Precondition: Valid clock
   ros::NodeHandle nh;
@@ -257,53 +279,40 @@ int main(int argc, char** argv)
   // Create an arm right controller action client to move the TIAGo's right arm
   arm_control_client_Ptr arm_right_client;
   createArmClient(arm_right_client, "arm_right_controller");
-
-  // Subscribe to the desired joint state topic
-  //ros::Subscriber joint_state_sub = nh.subscribe("my_topic", 1, jointStateCallback);
-
-   // Inizializzione del client per il servizio "my_ik_solver_service"
-   //ikClient = nh.serviceClient<tiago_dual_moveit_tutorial::MyInverseKinematic>("my_ik_solver_service");
-   
-   ikClient = nh.serviceClient<my_thesis_pkg::MyInverseKinematic>("my_ik_solver_service");
-   
-    // Inizializzione del client per il servizio "limitless_ik_service" da chiamare in caso quello con joint limits restituisca pos non reachable
-   limitless_ikClient = nh.serviceClient<my_thesis_pkg::MyInverseKinematic>("limitless_ik_service");
-
-// limitless_ikClient = nh.serviceClient<tiago_dual_moveit_tutorial::MyInverseKinematic>("limitless_ik_service");
-
-
-
-   // Subscribe to the desired joint state topic
-  // ros::Subscriber frame_sub = nh.subscribe("right_arm_frame_topic", 1, futureCallback);
-  ros::Subscriber frame_sub = nh.subscribe("right_arm_frame_topic", 1, UnityCallback);
   
+  // initialze server client to /my_ik_solver_service
+  ikClient = nh.serviceClient<my_thesis_pkg::MyInverseKinematic>("my_ik_solver_service");
+
+  // Subscribe to right_arm_frame_topic to receive data from unity engine
+  ros::Subscriber frame_sub = nh.subscribe("right_arm_frame_topic", 1, UnityCallback);
+  //define variable
   control_msgs::FollowJointTrajectoryGoal resulting_joint_goal;
   
-  // Inizializza il tempo del messaggio precedente con il tempo corrente
-  previous_msg_time = ros::Time::now();
-  
-  //chiamo future callback qui per dare inizio al procedimento...
-  //in implementazione vera poi avro  callback vera che da inizio da sola
- ///////////////// futureCallback(); //**cancellare poi sta riga
   // Main loop
   while (ros::ok())
   {
-    // Check if a new joint state has been received
+    // Check if a new joint state has been received from unity
     if (new_frame_received)
     {
-    
-     ROS_INFO("CURRENT request.X = %f",goal_frame.request.end_effector_frame.position.x);
-     resulting_joint_goal = computeIK();
-      // Move the arm to the new desired joint state
-      moveArmToJointState(resulting_joint_goal, arm_right_client);
-      ROS_INFO("###### input ricrvuto ... MUOVO BRACCIO DESTRO  ... ########");
-      // Reset the flag
-      new_frame_received = false;
-    }
+    // copmute the inverse kinematic for the new frame calling compteIK() function 
+    resulting_joint_goal = computeIK();
 
+     if( resulting_joint_goal.trajectory.points[0].positions[0] == 200 )
+     {
+     	ROS_INFO("###### result joint EMPTY!!! ########");
+     }
+     else
+     {
+     	// Move the arm to the new desired joint state
+      moveArmToJointState(resulting_joint_goal, arm_right_client);
+      ROS_INFO("###### moving right arm ########");  
+     }  
+     // Reset the flag
+     new_frame_received = false;    
+    }
     ros::spinOnce();
     ros::Duration(0.1).sleep();
   }
-
   return EXIT_SUCCESS;
 }
+

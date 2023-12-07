@@ -1,3 +1,33 @@
+/**
+* \file clientLEFT_arm.cpp
+* \brief TIAGo's left arm controller
+* \author Claudio Del Gaizo
+* \version 0.1
+* \date 7/12/2023
+*
+*
+* \details
+*
+* Subscribes to: <BR>
+*
+* /left_arm_frame_topic : to have info about user's left hand's movements from Unity
+*
+*
+* Action Client to: <BR>
+*
+* /arm_left_controller/follow_joint_trajectory : to move TIAGo's left arm
+*
+*
+* Service client to: <BR>
+*
+* /my_ik_solver_service : to send request about Inverse kinematics computations
+*
+*
+* Description:
+*
+* This simple node subscribes to the /left_arm_frame_topic to receive data from Unity's publisher about the Pose of the user's left hand. Then uses the received Pose to request an IK solution to /my_ik_solver_service. In the end sends the configuration received as response to the /arm_left_controller/follow_joint_trajectory action servert to move TIAGo's left arm.
+**/
+
 // C++ standard headers
 #include <exception>
 #include <string>
@@ -22,15 +52,25 @@ typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>
 typedef boost::shared_ptr<arm_control_client> arm_control_client_Ptr;
 
 // Global definitions
-ros::ServiceClient ikClient;
-ros::ServiceClient limitless_ikClient;
-my_thesis_pkg::MyInverseKinematic goal_frame;
-bool new_frame_received = false;
-float prev_roll = 0;
-float prev_pitch = 0;
-float prev_yaw = 0;
+ros::ServiceClient ikClient; ///< global client definition
+my_thesis_pkg::MyInverseKinematic goal_frame; ///< global message definition
+bool new_frame_received = false; ///< global boolean to identify a different frame received
+float prev_roll = 0; ///< global variables to store hand's previous roll value
+float prev_pitch = 0; ///< global variables to store hand's previous pitch value
+float prev_yaw = 0; ///< global variables to store hand's previous yaw value
 
-// Callback to receive msgs from UNITY environment about hand joint Pose
+/**
+* \brief Subscriber Callback for /left_arm_frame_topic
+* 
+* \param msg : unity_robotics_demo_msgs::MyPosRotConstPtr& : a 7D Pose of user's left palm's frame. orientation expressed in Quaternions.
+*
+*
+* \return void
+*
+* 
+* Callback function to receive data from Unity's publisher about the Pose of the user's left hand. Converts orientation from quaternions into Euler angles and updates the value of 'goal_frame' global variable.
+*
+**/
 void UnityCallback(const unity_robotics_demo_msgs::PosRotConstPtr& msg )
 {  
   // fill the client request with the values received
@@ -57,7 +97,19 @@ void UnityCallback(const unity_robotics_demo_msgs::PosRotConstPtr& msg )
 }
 
 
-// Create a ROS action client to move TIAGo's arm
+/**
+* \brief function to create action client 
+*
+* \param action_client : arm_control_client_Ptr& : the pointer to the action client
+*
+* \param arm_controller_name : std::string : the name of the controller
+*
+* \return void
+*
+* This function is called to creat a client to the /arm_left_controller/follow_joint_trajectory action service, used to move TIAGo's left arm
+*
+**/
+/* ***************************************************************************/
 void createArmClient(arm_control_client_Ptr& action_client, const std::string& arm_controller_name)
 {
   ROS_INFO("Creating action client for %s...", arm_controller_name.c_str());
@@ -77,7 +129,19 @@ void createArmClient(arm_control_client_Ptr& action_client, const std::string& a
     throw std::runtime_error("Error in createArmClient: arm controller action server not available");
 }
 
-// Move the arm to the desired joint state 
+/**
+* \brief function to move TIAGo's arm 
+*
+* \param joint_goal : control_msgs::FollowJointTrajectoryGoal: the values of joints angles to control TIAGo's arm
+*
+* \param action_client : arm_control_client_Ptr& : the pointer to the action client
+*
+* \return void
+*
+* This function is called to eventually move TIAGo's arm by sending the joint configuration to the action server /arm_left_controller/follow_joint_trajectory
+*
+**/
+/* ***************************************************************************/
 void moveArmToJointState(const control_msgs::FollowJointTrajectoryGoal& joint_goal, arm_control_client_Ptr& action_client)
 {
   control_msgs::FollowJointTrajectoryGoal goal;
@@ -89,7 +153,18 @@ void moveArmToJointState(const control_msgs::FollowJointTrajectoryGoal& joint_go
 
 
 // function that takes desired frame's positions contained in the global variable 'goal_frame' to
-// call the 'my_ik_solver_service' and returns as output the joint values contained in the service response
+// call the 'ik_service' and returns as output the joint values contained in the service response
+
+/**
+* \brief function to compute the Invesrse Kinematics on TIAGo's geometry 
+*
+*
+* \return resulting_joint_goal: control_msgs::FollowJointTrajectoryGoal: TIAGO's arm joints' angles
+*
+* function that takes desired frame's positions contained in the global variable 'goal_frame' to call the 'ik_service' and returns as output the joint values contained in the service response
+*
+**/
+/* ***************************************************************************/
 control_msgs::FollowJointTrajectoryGoal computeIK() 
 {
 control_msgs::FollowJointTrajectoryGoal resulting_joint_goal; 
@@ -178,7 +253,13 @@ resulting_joint_goal.trajectory.points.resize(1);
   }
 }
 
-// Entry point
+/**
+* \brief main function
+*
+*
+* Entry point. Initializes the node, the subscriber to /left_arm_frame_topic, the action client to move TIAGO's arm and the service client to /my_ik_solver_service. Then in the main loop, waits for a new position to be received, then calls the 'computeIK()' function to send a request to /my_ik_solver_service, in order to compute the inverse Kinematics of the Hand pose received. In the end, if IK was computed succesfully, moves the robot sending the joints configuration obtained to the action service /arm_left_controller/follow_joint_trajectory.
+*
+**/
 int main(int argc, char** argv)
 {
   // Init the ROS node
@@ -222,7 +303,7 @@ int main(int argc, char** argv)
      {
      	// Move the arm to the new desired joint state
       moveArmToJointState(resulting_joint_goal, arm_left_client);
-      ROS_INFO("###### moving right arm  #######"); 
+      ROS_INFO("###### moving left arm  #######"); 
      }    
      // Reset the flag
      new_frame_received = false;
