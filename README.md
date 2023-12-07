@@ -31,9 +31,7 @@ The Robot
 ====================================================================
 
 
-	<!---
-AAA
--->
+	<!--- AAA -->
 <p><p align="center">
 <img src="https://github.com/claudio-dg/assignment2/blob/main/media/My_robot1.png?raw=true" width="400" />
 <p>
