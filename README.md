@@ -31,7 +31,9 @@ The Robot
 ====================================================================
 
 
-	<!-- 
+	<!---
+AAA
+-->
 <p><p align="center">
 <img src="https://github.com/claudio-dg/assignment2/blob/main/media/My_robot1.png?raw=true" width="400" />
 <p>
@@ -39,7 +41,7 @@ The Robot
 <p><p align="center">
 <img src="https://github.com/claudio-dg/assignment2/blob/main/media/My_robot2.png?raw=true" width="400" />
 <p>
--->
+
 	
 Please find the code to create this robot in the [urdf](https://github.com/claudio-dg/assignment2/tree/main/urdf) folder.
 ##  Dependencies and Setup
