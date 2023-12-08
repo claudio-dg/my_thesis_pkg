@@ -13,11 +13,18 @@ Table of contents
 
 * [Introduction](#introduction)
 * [Dependencies and Setup](#dependencies-and-setup)
-* [Project structure](#project-structure)
-* [Software Components and code description](#software-components-and-code-description)
-* [Behaviuor Presentation](#behaviuor-presentation)
-* [Limitations and Possible Improvements](#limitations-and-possible-improvements)
+* [Content Description](#content-description)
 
 
 ## Introduction
+This repository contains all the software component developed on ROS for my master thesis in Robotics engineering, to implement a telerobotic system to control TIAGo robot from remote.
+The following sections are divided as follows:
+   * **Dependencies and Setup**: offers some links to the required packages for this application, and explains how to deploy this application on your PC
+   * **Content Description**: explains the content of the folders contained in this repository.
+
+## Dependencies and Setup
+
+In order to make this repository work properly, make sure to have the here listed dependencies correctly installed in your ROS-Workspace.
+
+## Content Description
 
