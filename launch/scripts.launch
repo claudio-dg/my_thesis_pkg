@@ -12,8 +12,11 @@
    <node name="Gripper_RightHand" pkg="my_thesis_pkg" type="Gripper_RightHand" output="screen" launch-prefix="lxterminal -e" />
    
    <node name="Gripper_LeftHand" pkg="my_thesis_pkg" type="Gripper_LeftHand" output="screen" launch-prefix="lxterminal -e" /> 
+   
+   <node name="default_server_endpoint.py" pkg="ros_tcp_endpoint" type="default_server_endpoint.py" output="screen" launch-prefix="lxterminal -e" /> 
   
-  
+ 
+
 <!--  commento -->
 
 </launch>
