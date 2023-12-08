@@ -59,11 +59,11 @@ $ hostname -I
 Here follows the folders' description:
 
 * [Docs](https://github.com/claudio-dg/my_thesis_pkg/tree/main/Docs): contains the Doxygen documentation of the code developed.
-* [launch](https://github.com/claudio-dg/my_thesis_pkg/tree/main/launch): contains the launch file to start the project
-* [src](https://github.com/claudio-dg/my_thesis_pkg/tree/main/src): contains the Cpp codes developed.
-  * ```Gripper_LeftHand.cpp``` and ```Gripper_rightHand.cpp``` are TIAGo's grippers controllers
-  * ```clientLEFT_arm.cpp``` and ```clientRIGHT_arm.cpp``` are TIAGo's arms controllers
-  * ```move_head_joint.cpp``` is TIAGo's head controller
-  * ```my_ik_server.cpp``` is the server node to compute inverse kinematics
+* [launch](https://github.com/claudio-dg/my_thesis_pkg/tree/main/launch): contains the launch file to start the project.
+* [src](https://github.com/claudio-dg/my_thesis_pkg/tree/main/src): contains the C++ codes developed.
+  * ```Gripper_LeftHand.cpp``` and ```Gripper_rightHand.cpp``` are TIAGo's grippers controllers;
+  * ```clientLEFT_arm.cpp``` and ```clientRIGHT_arm.cpp``` are TIAGo's arms controllers;
+  * ```move_head_joint.cpp``` is TIAGo's head controller;
+  * ```my_ik_server.cpp``` is the server node to compute inverse kinematics;
 * [srv](https://github.com/claudio-dg/my_thesis_pkg/tree/main/srv): contains custom service ```MyInverseKinematic.srv``` used to let arms controllers interact with the IK server.
   
