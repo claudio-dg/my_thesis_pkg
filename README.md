@@ -58,7 +58,7 @@ $ hostname -I
 
 Here follows the folders' description:
 
-* [Docs](https://github.com/claudio-dg/my_thesis_pkg/tree/main/Docs): contains the Doxygen documentation of the code developed.
+* [docs](https://github.com/claudio-dg/my_thesis_pkg/tree/main/docs): contains the Doxygen documentation of the code developed. Visit the following [link](https://claudio-dg.github.io/my_thesis_pkg/files.html) to have direct access to the documentation.
 * [launch](https://github.com/claudio-dg/my_thesis_pkg/tree/main/launch): contains the launch file to start the project.
 * [src](https://github.com/claudio-dg/my_thesis_pkg/tree/main/src): contains the C++ codes developed.
   * ```Gripper_LeftHand.cpp``` and ```Gripper_rightHand.cpp``` are TIAGo's grippers controllers;
