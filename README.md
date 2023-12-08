@@ -2,7 +2,6 @@ my_thesis_pkg
 ================================
 This repository contains the ROS Software components developed for my master thesis in Robotics engineering, to implement a telerobotic system to control TIAGo robot from remote.
 
-my repo containing msgs for unity ros communication, make sure to have this package both on ros side and unity counterpart [unity_robotics_demo_msg](https://github.com/claudio-dg/unity_robotics_demo_msgs.git)
 #### Author: Claudio Del Gaizo, S4696649
 
 #### mail: cdg9914@gmail.com
@@ -26,6 +25,7 @@ The following sections are divided as follows:
 
 In order to make this repository work properly, make sure to have the here listed dependencies correctly installed in your ROS-Workspace.
 
+* [TIAGo++ robot packages](http://wiki.ros.org/Robots/TIAGo%2B%2B/Tutorials/Installation/Installing_Tiago%2B%2B_tutorial_docker): follow this tutorial to install required packages to interact with TIAGo, both in Gazebo simulation and with the real robot. For personal experience these installations may not always work, so manual installation may be required. 
   
 * [ROS-TCP Endpoint](https://github.com/Unity-Technologies/ROS-TCP-Endpoint): ROS package used to create an endpoint to accept ROS messages sent from a Unity scene. This ROS package works in tandem with the [ROS TCP Connector](https://github.com/Unity-Technologies/ROS-TCP-Connector/tree/main) Unity package.
 
@@ -33,10 +33,9 @@ In order to make this repository work properly, make sure to have the here liste
 
 * [Unity-Robotics-Hub](https://github.com/Unity-Technologies/Unity-Robotics-Hub/tree/main): visit this repository to find useful tutorials on how to implement ros-unity interaction using formely listed packages.
  
-* [TIAGo++ robot packages](http://wiki.ros.org/Robots/TIAGo%2B%2B/Tutorials/Installation/Installing_Tiago%2B%2B_tutorial_docker): follow this tutorial to install required packages to interact with TIAGo, both in Gazebo simulation and with the real robot. For personal experience these installations may not always work, so manual installation may be required. 
 
 
-Once all these dependencies are correctly included in your workspace, you can download this repository with the following command line from:
+Once all these dependencies are correctly included in your workspace, you can download this repository with the following command line:
 
 ```bash
 $ git clone https://github.com/claudio-dg/my_thesis_pkg.git
@@ -57,3 +56,14 @@ $ hostname -I
 
 ## Content Description
 
+Here follows the folders' description:
+
+* [Docs](https://github.com/claudio-dg/my_thesis_pkg/tree/main/Docs): contains the Doxygen documentation of the code developed.
+* [launch](https://github.com/claudio-dg/my_thesis_pkg/tree/main/launch): contains the launch file to start the project
+* [src](https://github.com/claudio-dg/my_thesis_pkg/tree/main/src): contains the Cpp codes developed.
+  * ```Gripper_LeftHand.cpp``` and ```Gripper_rightHand.cpp``` are TIAGo's grippers controllers
+  * ```clientLEFT_arm.cpp``` and ```clientRIGHT_arm.cpp``` are TIAGo's arms controllers
+  * ```move_head_joint.cpp``` is TIAGo's head controller
+  * ```my_ik_server.cpp``` is the server node to compute inverse kinematics
+* [srv](https://github.com/claudio-dg/my_thesis_pkg/tree/main/srv): contains custom service ```MyInverseKinematic.srv``` used to let arms controllers interact with the IK server.
+  
